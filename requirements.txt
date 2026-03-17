@@ -1,0 +1,6 @@
+streamlit
+pypdf
+pymupdf
+python-docx
+fpdf
+google-generativeai
