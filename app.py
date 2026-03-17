@@ -1,4 +1,15 @@
 import streamlit as st
+import google.generativeai as genai
+
+# This line looks for the secret you just saved in Step 1
+if "GEMINI_API_KEY" in st.secrets:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    st.error("Please add your GEMINI_API_KEY to the Streamlit Secrets!")
+
+import streamlit as st
 import fitz  # PyMuPDF
 from docx import Document
 from fpdf import FPDF
