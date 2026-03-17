@@ -5,7 +5,7 @@ from fpdf import FPDF
 import google.generativeai as genai
 
 # 1. GOOGLE SEARCH VERIFICATION (Add this for Google to find you)
-st.html('<meta name="google-site-verification" content="google957e0fe0b2f33b18" />')
+st.html('<meta name="google-site-verification" content="hqxCx4AQdaHL1M9LpRWj7XSrsVOErPlI0HrKHPe_8C0" />')
 
 # 2. APP CONFIGURATION & SEO
 st.set_page_config(
