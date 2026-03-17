@@ -1,60 +1,105 @@
-<meta name="google-site-verification" content="hqxCx4AQdaHL1M9LpRWj7XSrsVOErPlI0HrKHPe_8C0" />
-st.set_page_config(
-    page_title="EditMyPDF | Free AI PDF & Word Editor",
-    page_icon="🖋️",
-    menu_items={
-        'About': "# EditMyPDF\nThe best free AI tool to summarize and edit documents."
-    }
-)
-
-import streamlit as st
-import google.generativeai as genai
-
-# This line looks for the secret you just saved in Step 1
-if "GEMINI_API_KEY" in st.secrets:
-    api_key = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-else:
-    st.error("Please add your GEMINI_API_KEY to the Streamlit Secrets!")
-
 import streamlit as st
 import fitz  # PyMuPDF
 from docx import Document
 from fpdf import FPDF
 import google.generativeai as genai
 
-# Securely load your key from Streamlit Secrets
+# 1. GOOGLE SEARCH VERIFICATION (Add this for Google to find you)
+st.html('<meta name="google-site-verification" content="google957e0fe0b2f33b18" />')
+
+# 2. APP CONFIGURATION & SEO
+st.set_page_config(
+    page_title="EditMyPDF - AI Powered Document Editor",
+    page_icon="🖋️",
+    layout="wide"
+)
+
+# 3. SECURE AI CONNECTION
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-1.5-flash')
 else:
-    st.error("Missing API Key! Please add GEMINI_API_KEY to your Streamlit Secrets.")
+    st.error("⚠️ AI Key Missing! Please add 'GEMINI_API_KEY' to your Streamlit Secrets.")
 
+# 4. DOCUMENT PROCESSING FUNCTIONS
 def extract_text(file):
-    if file.type == "application/pdf":
-        doc = fitz.open(stream=file.read(), filetype="pdf")
-        return "".join([page.get_text() for page in doc])
-    elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        doc = Document(file)
-        return "\n".join([p.text for p in doc.paragraphs])
+    """Extracts text from PDF or Word files."""
+    try:
+        if file.type == "application/pdf":
+            doc = fitz.open(stream=file.read(), filetype="pdf")
+            return "".join([page.get_text() for page in doc])
+        elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            doc = Document(file)
+            return "\n".join([p.text for p in doc.paragraphs])
+    except Exception as e:
+        st.error(f"Error reading file: {e}")
     return ""
 
-st.set_page_config(page_title="AI Editor", page_icon="🖋️")
-st.title("🖋️ Simple AI Document Editor")
+def create_pdf(text):
+    """Turns AI result into a downloadable PDF."""
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    # Encodes text to avoid errors with special characters
+    safe_text = text.encode('latin-1', 'replace').decode('latin-1')
+    pdf.multi_cell(0, 10, txt=safe_text)
+    return pdf.output(dest='S').encode('latin-1')
 
-uploaded_file = st.file_uploader("Upload PDF or Word", type=["pdf", "docx"])
+# 5. USER INTERFACE (UI)
+st.title("🖋️ EditMyPDF: AI Document Assistant")
+st.markdown("---")
+
+# Sidebar for Instructions
+with st.sidebar:
+    st.header("How to use")
+    st.write("1. Upload a PDF or Word file.")
+    st.write("2. Tell the AI what to do (Summarize, Translate, etc).")
+    st.write("3. Download your edited version as a new PDF.")
+    st.divider()
+    st.info("Your files are processed securely and not stored permanently.")
+
+# Main Upload Section
+uploaded_file = st.file_uploader("Upload your document (PDF or DOCX)", type=["pdf", "docx"])
 
 if uploaded_file:
-    text = extract_text(uploaded_file)
-    task = st.text_input("What should AI do?", "Summarize this document clearly.")
+    original_text = extract_text(uploaded_file)
     
-    if st.button("Process"):
-        with st.spinner("AI is editing..."):
-            response = model.generate_content(f"{task}\n\n{text}")
-            st.session_state['out'] = response.text
-            st.success("Success!")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Original Content")
+        st.text_area("Original Text View", original_text, height=450)
 
-    if 'out' in st.session_state:
-        st.text_area("Result", st.session_state['out'], height=300)
-        st.download_button("Download Result (Text)", st.session_state['out'], "edited.txt")
+    with col2:
+        st.subheader("AI Editor")
+        instruction = st.text_input("What should the AI do?", placeholder="e.g. 'Summarize this in 5 bullet points'")
+        
+        if st.button("✨ Process Document"):
+            if instruction:
+                with st.spinner("AI is working its magic..."):
+                    prompt = f"Act as a professional document editor. {instruction}:\n\n{original_text}"
+                    response = model.generate_content(prompt)
+                    st.session_state['ai_result'] = response.text
+                    st.success("Done!")
+            else:
+                st.warning("Please enter an instruction first.")
+
+        # Results and Downloads
+        if 'ai_result' in st.session_state:
+            st.text_area("AI Result", st.session_state['ai_result'], height=300)
+            
+            # Export Buttons
+            pdf_bytes = create_pdf(st.session_state['ai_result'])
+            
+            st.download_button(
+                label="📥 Download as PDF",
+                data=pdf_bytes,
+                file_name="AI_Edited_Document.pdf",
+                mime="application/pdf"
+            )
+            
+            st.download_button(
+                label="📄 Download as Text",
+                data=st.session_state['ai_result'],
+                file_name="AI_Edited_Document.txt"
+            )
