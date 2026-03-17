@@ -1,3 +1,12 @@
+st.html('<meta name="google-site-verification" content="..." />')
+st.set_page_config(
+    page_title="EditMyPDF | Free AI PDF & Word Editor",
+    page_icon="🖋️",
+    menu_items={
+        'About': "# EditMyPDF\nThe best free AI tool to summarize and edit documents."
+    }
+)
+
 import streamlit as st
 import google.generativeai as genai
 
