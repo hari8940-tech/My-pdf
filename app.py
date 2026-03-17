@@ -1,4 +1,4 @@
-st.html(<meta name="google-site-verification" content="hqxCx4AQdaHL1M9LpRWj7XSrsVOErPlI0HrKHPe_8C0" />)
+<meta name="google-site-verification" content="hqxCx4AQdaHL1M9LpRWj7XSrsVOErPlI0HrKHPe_8C0" />
 st.set_page_config(
     page_title="EditMyPDF | Free AI PDF & Word Editor",
     page_icon="🖋️",
